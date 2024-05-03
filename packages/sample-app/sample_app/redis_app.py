@@ -1,3 +1,9 @@
+"""_summary_
+    Code was taken from https://redis.io/docs/latest/develop/get-started/vector-database/
+    It requires a Redis DB running with the RedisSearch and RedisJSON modules enabled.
+"""
+
+
 import json
 import time
 
@@ -37,10 +43,6 @@ for i, bike in enumerate(bikes, start=1):
     pipeline.json().set(redis_key, "$", bike)
 res = pipeline.execute()
 # >>> [True, True, True, True, True, True, True, True, True, True, True]
-
-#for i, bike in enumerate(bikes, start=1):
-#    redis_key = f"bikes:{i:03}"
-#    client.json().set(redis_key, "$", bike)
 
 res = client.json().get("bikes:010", "$.model")
 # >>> ['Summit']
