@@ -15,6 +15,10 @@ from redis.commands.search.indexDefinition import IndexDefinition, IndexType
 from redis.commands.search.query import Query
 from sentence_transformers import SentenceTransformer
 
+from traceloop.sdk import Traceloop
+from traceloop.sdk.decorators import workflow
+
+Traceloop.init(app_name="redis_app")
 
 url = "https://raw.githubusercontent.com/bsbodden/redis_vss_getting_started/main/data/bikes.json"
 response = requests.get(url)
@@ -142,7 +146,7 @@ encoded_queries = embedder.encode(queries)
 len(encoded_queries)
 # >>> 11
 
-
+@workflow("create_query_table")
 def create_query_table(query, queries, encoded_queries, extra_params={}):
     results_list = []
     for i, encoded_query in enumerate(encoded_queries):
