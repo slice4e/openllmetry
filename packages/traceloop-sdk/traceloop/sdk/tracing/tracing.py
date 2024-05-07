@@ -435,6 +435,7 @@ def init_instrumentations(should_enrich_metrics: bool):
     init_anthropic_instrumentor(should_enrich_metrics)
     init_cohere_instrumentor()
     init_pinecone_instrumentor()
+    init_redis_instrumentor()
     init_qdrant_instrumentor()
     init_chroma_instrumentor()
     init_haystack_instrumentor()
