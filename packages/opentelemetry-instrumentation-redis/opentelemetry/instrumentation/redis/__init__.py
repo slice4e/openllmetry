@@ -1,9 +1,10 @@
 """OpenTelemetry Pinecone instrumentation"""
 
 import logging
-from opentelemetry.instrumentation.pinecone.config import Config
-from opentelemetry.instrumentation.pinecone.utils import dont_throw
+from opentelemetry.instrumentation.redis.config import Config
+from opentelemetry.instrumentation.redis.utils import dont_throw
 import pinecone
+import redis
 from typing import Collection
 from wrapt import wrap_function_wrapper
 
@@ -17,7 +18,7 @@ from opentelemetry.instrumentation.utils import (
     unwrap,
 )
 from opentelemetry.semconv.ai import EventAttributes, Events
-from opentelemetry.instrumentation.pinecone.version import __version__
+from opentelemetry.instrumentation.redis.version import __version__
 
 from opentelemetry.semconv.ai import SpanAttributes
 
@@ -56,6 +57,11 @@ WRAPPED_METHODS = [
         "object": "Index",
         "method": "delete",
         "span_name": "pinecone.delete",
+    },
+    {
+        "object": "Redis",
+        "method": "search",
+        "span_name": "search",
     },
 ]
 
