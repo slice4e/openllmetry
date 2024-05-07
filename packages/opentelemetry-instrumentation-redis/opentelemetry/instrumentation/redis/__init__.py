@@ -28,36 +28,6 @@ _instruments = ("redis-client >= 4.3.4",)
 
 
 WRAPPED_METHODS = [
-    # {
-    #     "object": "GRPCIndex",
-    #     "method": "query",
-    #     "span_name": "pinecone.query",
-    # },
-    # {
-    #     "object": "GRPCIndex",
-    #     "method": "upsert",
-    #     "span_name": "pinecone.upsert",
-    # },
-    # {
-    #     "object": "GRPCIndex",
-    #     "method": "delete",
-    #     "span_name": "pinecone.delete",
-    # },
-    # {
-    #     "object": "Index",
-    #     "method": "query",
-    #     "span_name": "pinecone.query",
-    # },
-    # {
-    #     "object": "Index",
-    #     "method": "upsert",
-    #     "span_name": "pinecone.upsert",
-    # },
-    # {
-    #     "object": "Index",
-    #     "method": "delete",
-    #     "span_name": "pinecone.delete",
-    # },
     {
         "object": "Redis",
         "method": "search",
@@ -154,6 +124,9 @@ def _set_input_attributes(span, kwargs):
 def _set_response_attributes(span, response):
     pass
 
+def _set_generic_span_attributes(span):
+    _set_span_attribute(span, "redis.search", ("search"))
+
 
 def _with_tracer_wrapper(func):
     """Helper for providing tracer for wrapper functions."""
@@ -183,18 +156,22 @@ def _wrap(tracer, to_wrap, wrapped, instance, args, kwargs):
     ) as span:
         if span.is_recording():
             if to_wrap.get("method") == "query":
-                _set_query_input_attributes(span, kwargs)
+                #_set_query_input_attributes(span, kwargs)
+                _set_generic_span_attributes(span)
             else:
-                _set_input_attributes(span, kwargs)
+                #_set_input_attributes(span, kwargs)
+                _set_generic_span_attributes(span)
 
         response = wrapped(*args, **kwargs)
 
         if response:
             if span.is_recording():
                 if to_wrap.get("method") == "query":
-                    _set_query_response(span, response)
+                    #_set_query_response(span, response)
+                    _set_generic_span_attributes(span)
                 else:
-                    _set_response_attributes(span, response)
+                    #_set_response_attributes(span, response)
+                    _set_generic_span_attributes(span)
 
                 span.set_status(Status(StatusCode.OK))
 
