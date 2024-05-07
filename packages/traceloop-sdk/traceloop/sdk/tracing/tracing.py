@@ -41,6 +41,7 @@ EXCLUDED_URLS = """
     api.anthropic.com,
     api.cohere.ai,
     pinecone.io,
+    redis.io,
     traceloop.com,
     posthog.com,
     bedrock-runtime,
@@ -147,6 +148,14 @@ class TracerWrapper(object):
                         if not init_pinecone_instrumentor():
                             print(
                                 Fore.RED + "Warning: Pinecone library does not exist."
+                            )
+                            print(Fore.RESET)
+                        else:
+                            instrument_set = True
+                    elif instrument == Instruments.REDIS:
+                        if not init_redis_instrumentor():
+                            print(
+                                Fore.RED + "Warning: Redis library does not exist."
                             )
                             print(Fore.RESET)
                         else:
@@ -496,6 +505,17 @@ def init_pinecone_instrumentor():
             instrumentor.instrument()
     return True
 
+def init_redis_instrumentor():
+    if importlib.util.find_spec("redis") is not None:
+        Telemetry().capture("instrumentation:redis:init")
+        from opentelemetry.instrumentation.redis import RedisInstrumentor
+
+        instrumentor = RedisInstrumentor(
+            exception_logger=lambda e: Telemetry().log_exception(e),
+        )
+        if not instrumentor.is_instrumented_by_opentelemetry:
+            instrumentor.instrument()
+    return True
 
 def init_qdrant_instrumentor():
     if importlib.util.find_spec("qdrant_client") is not None:
