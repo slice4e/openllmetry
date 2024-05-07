@@ -24,7 +24,7 @@ from opentelemetry.semconv.ai import SpanAttributes
 
 logger = logging.getLogger(__name__)
 
-_instruments = ("redis-client >= 5.0.1",)
+_instruments = ("redis-client >= 4.3.4",)
 
 
 WRAPPED_METHODS = [

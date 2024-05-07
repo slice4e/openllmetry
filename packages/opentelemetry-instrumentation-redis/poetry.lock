@@ -961,17 +961,17 @@ files = [
 
 [[package]]
 name = "redis"
-version = "5.0.4"
+version = "4.6.0"
 description = "Python client for Redis database and key-value store"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "redis-5.0.4-py3-none-any.whl", hash = "sha256:7adc2835c7a9b5033b7ad8f8918d09b7344188228809c98df07af226d39dec91"},
-    {file = "redis-5.0.4.tar.gz", hash = "sha256:ec31f2ed9675cc54c21ba854cfe0462e6faf1d83c8ce5944709db8a4700b9c61"},
+    {file = "redis-4.6.0-py3-none-any.whl", hash = "sha256:e2b03db868160ee4591de3cb90d40ebb50a90dd302138775937f6a42b7ed183c"},
+    {file = "redis-4.6.0.tar.gz", hash = "sha256:585dc516b9eb042a619ef0a39c3d7d55fe81bdb4df09a52c9cdde0d07bf1aa7d"},
 ]
 
 [package.dependencies]
-async-timeout = {version = ">=4.0.3", markers = "python_full_version < \"3.11.3\""}
+async-timeout = {version = ">=4.0.2", markers = "python_full_version <= \"3.11.2\""}
 
 [package.extras]
 hiredis = ["hiredis (>=1.0.0)"]
@@ -1361,4 +1361,4 @@ instruments = []
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<4"
-content-hash = "3696d9728bf15b9e9f8066ca460085419991bb2712bb0c4d1e0ade2e581a2d16"
+content-hash = "9c3f1c5eafd3e801574f3b33cdbd69eb21b5e42b8150958dc41c91b7c7f8beb8"

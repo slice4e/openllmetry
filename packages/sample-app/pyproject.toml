@@ -50,7 +50,11 @@ llama-index-embeddings-huggingface = "^0.2.0"
 litellm = "^1.34.42"
 text-generation = "^0.7.0"
 llama-index-vector-stores-chroma = "^0.1.6"
+<<<<<<< HEAD
 langchain-openai = "^0.1.6"
+=======
+redis = "^4.3.4"
+>>>>>>> change redis version requirements
 
 [tool.poetry.dependencies.opentelemetry-instrumentation-openai]
 path = "../opentelemetry-instrumentation-openai"
