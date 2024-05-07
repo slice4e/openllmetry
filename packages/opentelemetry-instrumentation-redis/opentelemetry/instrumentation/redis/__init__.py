@@ -201,8 +201,8 @@ def _wrap(tracer, to_wrap, wrapped, instance, args, kwargs):
         return response
 
 
-class PineconeInstrumentor(BaseInstrumentor):
-    """An instrumentor for Pinecone's client library."""
+class RedisInstrumentor(BaseInstrumentor):
+    """An instrumentor for Redis's client library."""
 
     def __init__(self, exception_logger=None):
         super().__init__()
@@ -219,7 +219,7 @@ class PineconeInstrumentor(BaseInstrumentor):
             wrap_method = wrapped_method.get("method")
             if getattr(pinecone, wrap_object, None):
                 wrap_function_wrapper(
-                    "pinecone",
+                    "redis",
                     f"{wrap_object}.{wrap_method}",
                     _wrap(tracer, wrapped_method),
                 )
@@ -227,4 +227,4 @@ class PineconeInstrumentor(BaseInstrumentor):
     def _uninstrument(self, **kwargs):
         for wrapped_method in WRAPPED_METHODS:
             wrap_object = wrapped_method.get("object")
-            unwrap(f"pinecone.{wrap_object}", wrapped_method.get("method"))
+            unwrap(f"redis.{wrap_object}", wrapped_method.get("method"))
