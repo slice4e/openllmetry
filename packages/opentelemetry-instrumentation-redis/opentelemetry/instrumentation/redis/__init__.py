@@ -28,36 +28,36 @@ _instruments = ("redis-client >= 4.3.4",)
 
 
 WRAPPED_METHODS = [
-    {
-        "object": "GRPCIndex",
-        "method": "query",
-        "span_name": "pinecone.query",
-    },
-    {
-        "object": "GRPCIndex",
-        "method": "upsert",
-        "span_name": "pinecone.upsert",
-    },
-    {
-        "object": "GRPCIndex",
-        "method": "delete",
-        "span_name": "pinecone.delete",
-    },
-    {
-        "object": "Index",
-        "method": "query",
-        "span_name": "pinecone.query",
-    },
-    {
-        "object": "Index",
-        "method": "upsert",
-        "span_name": "pinecone.upsert",
-    },
-    {
-        "object": "Index",
-        "method": "delete",
-        "span_name": "pinecone.delete",
-    },
+    # {
+    #     "object": "GRPCIndex",
+    #     "method": "query",
+    #     "span_name": "pinecone.query",
+    # },
+    # {
+    #     "object": "GRPCIndex",
+    #     "method": "upsert",
+    #     "span_name": "pinecone.upsert",
+    # },
+    # {
+    #     "object": "GRPCIndex",
+    #     "method": "delete",
+    #     "span_name": "pinecone.delete",
+    # },
+    # {
+    #     "object": "Index",
+    #     "method": "query",
+    #     "span_name": "pinecone.query",
+    # },
+    # {
+    #     "object": "Index",
+    #     "method": "upsert",
+    #     "span_name": "pinecone.upsert",
+    # },
+    # {
+    #     "object": "Index",
+    #     "method": "delete",
+    #     "span_name": "pinecone.delete",
+    # },
     {
         "object": "Redis",
         "method": "search",
