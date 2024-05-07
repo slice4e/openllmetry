@@ -1,14 +1,14 @@
 {
-  "name": "opentelemetry-instrumentation-pinecone",
+  "name": "opentelemetry-instrumentation-redis",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
-  "sourceRoot": "packages/opentelemetry-instrumentation-pinecone/opentelemetry/instrumentation/pinecone",
+  "sourceRoot": "packages/opentelemetry-instrumentation-redis/opentelemetry/instrumentation/redis",
   "targets": {
     "lock": {
       "executor": "@nxlv/python:run-commands",
       "options": {
         "command": "poetry lock --no-update",
-        "cwd": "packages/opentelemetry-instrumentation-pinecone"
+        "cwd": "packages/opentelemetry-instrumentation-redis"
       }
     },
     "add": {
@@ -27,7 +27,7 @@
       "executor": "@nxlv/python:build",
       "outputs": ["{projectRoot}/dist"],
       "options": {
-        "outputPath": "packages/opentelemetry-instrumentation-pinecone/dist",
+        "outputPath": "packages/opentelemetry-instrumentation-redis/dist",
         "publish": false,
         "lockedVersions": true,
         "bundleLocalDependencies": true
@@ -46,21 +46,21 @@
     "lint": {
       "executor": "@nxlv/python:flake8",
       "outputs": [
-        "{workspaceRoot}/reports/packages/opentelemetry-instrumentation-pinecone/pylint.txt"
+        "{workspaceRoot}/reports/packages/opentelemetry-instrumentation-redis/pylint.txt"
       ],
       "options": {
-        "outputFile": "reports/packages/opentelemetry-instrumentation-pinecone/pylint.txt"
+        "outputFile": "reports/packages/opentelemetry-instrumentation-redis/pylint.txt"
       }
     },
     "test": {
       "executor": "@nxlv/python:run-commands",
       "outputs": [
-        "{workspaceRoot}/reports/packages/opentelemetry-instrumentation-pinecone/unittests",
-        "{workspaceRoot}/coverage/packages/opentelemetry-instrumentation-pinecone"
+        "{workspaceRoot}/reports/packages/opentelemetry-instrumentation-redis/unittests",
+        "{workspaceRoot}/coverage/packages/opentelemetry-instrumentation-redis"
       ],
       "options": {
         "command": "poetry run pytest tests/",
-        "cwd": "packages/opentelemetry-instrumentation-pinecone"
+        "cwd": "packages/opentelemetry-instrumentation-redis"
       }
     },
     "build-release": {
@@ -70,7 +70,7 @@
           "chmod +x ../../scripts/build-release.sh",
           "../../scripts/build-release.sh"
         ],
-        "cwd": "packages/opentelemetry-instrumentation-pinecone"
+        "cwd": "packages/opentelemetry-instrumentation-redis"
       }
     }
   },
