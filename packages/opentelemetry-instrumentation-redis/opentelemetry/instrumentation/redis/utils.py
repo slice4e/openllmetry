@@ -1,6 +1,6 @@
 import logging
 
-from opentelemetry.instrumentation.pinecone.config import Config
+from opentelemetry.instrumentation.redis.config import Config
 
 
 def dont_throw(func):
