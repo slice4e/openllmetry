@@ -30,8 +30,8 @@ _instruments = ("redis-client >= 4.3.4",)
 WRAPPED_METHODS = [
     {
         "object": "Redis",
-        "method": "search",
-        "span_name": "search",
+        "method": "ping",
+        "span_name": "ping",
     },
 ]
 
@@ -125,7 +125,7 @@ def _set_response_attributes(span, response):
     pass
 
 def _set_generic_span_attributes(span):
-    _set_span_attribute(span, "redis.search", ("search"))
+    _set_span_attribute(span, "redis.ping", "ping")
 
 
 def _with_tracer_wrapper(func):
@@ -143,6 +143,7 @@ def _with_tracer_wrapper(func):
 @_with_tracer_wrapper
 def _wrap(tracer, to_wrap, wrapped, instance, args, kwargs):
     """Instruments and calls every function defined in TO_WRAP."""
+    print("In _wrap\n")
     if context_api.get_value(_SUPPRESS_INSTRUMENTATION_KEY):
         return wrapped(*args, **kwargs)
 
@@ -154,27 +155,28 @@ def _wrap(tracer, to_wrap, wrapped, instance, args, kwargs):
             SpanAttributes.VECTOR_DB_VENDOR: "Redis",
         },
     ) as span:
-        if span.is_recording():
-            if to_wrap.get("method") == "query":
-                #_set_query_input_attributes(span, kwargs)
-                _set_generic_span_attributes(span)
-            else:
-                #_set_input_attributes(span, kwargs)
-                _set_generic_span_attributes(span)
+        # if span.is_recording():
+        #     if to_wrap.get("method") == "query":
+        #         #_set_query_input_attributes(span, kwargs)
+        #         _set_generic_span_attributes(span)
+        #     else:
+        #         #_set_input_attributes(span, kwargs)
+        #         _set_generic_span_attributes(span)
 
         response = wrapped(*args, **kwargs)
 
-        if response:
-            if span.is_recording():
-                if to_wrap.get("method") == "query":
-                    #_set_query_response(span, response)
-                    _set_generic_span_attributes(span)
-                else:
-                    #_set_response_attributes(span, response)
-                    _set_generic_span_attributes(span)
+        # if response:
+        #     if span.is_recording():
+        #         if to_wrap.get("method") == "query":
+        #             #_set_query_response(span, response)
+        #             _set_generic_span_attributes(span)
+        #         else:
+        #             #_set_response_attributes(span, response)
+        #             _set_generic_span_attributes(span)
 
-                span.set_status(Status(StatusCode.OK))
-
+        #         span.set_status(Status(StatusCode.OK))
+        
+        _set_generic_span_attributes(span)
         return response
 
 
