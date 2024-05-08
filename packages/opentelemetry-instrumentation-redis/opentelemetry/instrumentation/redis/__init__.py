@@ -46,7 +46,7 @@ def _set_span_attribute(span, name, value):
 @dont_throw
 def _set_generic_span_attributes(span):
     print("In _set_generic_span_attributes\n")
-    _set_span_attribute(span, "redis.generic", "generic")
+    _set_span_attribute(span, "redis.ping", 1)
 
 
 def _with_tracer_wrapper(func):
