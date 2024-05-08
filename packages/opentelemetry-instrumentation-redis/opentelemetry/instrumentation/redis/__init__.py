@@ -71,13 +71,20 @@ def _wrap(tracer, to_wrap, wrapped, instance, args, kwargs):
     name = to_wrap.get("span_name")
     print("span name: \n", name)
     with tracer.start_as_current_span(name) as span:
+        # span.set_attribute(SpanAttributes.DB_SYSTEM, "redis")
+        # span.set_attribute(SpanAttributes.DB_OPERATION, to_wrap.get("method"))
         
-        span.set_attribute(SpanAttributes.DB_SYSTEM, "redis")
-        span.set_attribute(SpanAttributes.DB_OPERATION, to_wrap.get("method"))
+        # _set_generic_span_attributes(span)
         
         response = wrapped(*args, **kwargs)
-
+        print("response: \n", response)
+        
+        if response:
+            span.add_event("redis.ping")
+            span.set_status(Status(StatusCode.OK))
+        
         _set_generic_span_attributes(span)
+        
         return response
 
 
