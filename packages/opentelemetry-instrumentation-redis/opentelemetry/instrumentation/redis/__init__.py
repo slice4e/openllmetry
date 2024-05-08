@@ -19,35 +19,18 @@ from opentelemetry.instrumentation.utils import (
 from opentelemetry.semconv.ai import EventAttributes, Events
 from opentelemetry.instrumentation.redis.version import __version__
 
-from opentelemetry.semconv.ai import SpanAttributes
+#from opentelemetry.semconv.ai import SpanAttributes
+from opentelemetry.semconv.trace import SpanAttributes
 
 logger = logging.getLogger(__name__)
 
-_instruments = ("redis-client >= 4.3.4",)
+_instruments = ("redis-client >= 1.0.1",)
 
 
 WRAPPED_METHODS = [
     {
         "package": redis,
         "object": "Redis",
-        "method": "ping",
-        "span_name": "ping",
-    },
-    {
-        "package": redis,
-        "object": "redis",
-        "method": "ping",
-        "span_name": "ping",
-    },
-    {
-        "package": redis,
-        "object": "redis.client.Redis",
-        "method": "ping",
-        "span_name": "ping",
-    },
-    {
-        "package": redis,
-        "object": "redis.client",
         "method": "ping",
         "span_name": "ping",
     },
@@ -60,8 +43,10 @@ def _set_span_attribute(span, name, value):
             span.set_attribute(name, value)
     return
 
+@dont_throw
 def _set_generic_span_attributes(span):
-    _set_span_attribute(span, "redis.ping", "ping")
+    print("In _set_generic_span_attributes\n")
+    _set_span_attribute(span, "redis.generic", "generic")
 
 
 def _with_tracer_wrapper(func):
