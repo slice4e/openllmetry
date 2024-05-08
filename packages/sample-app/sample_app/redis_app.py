@@ -33,6 +33,7 @@ bikes = response.json()
 json.dumps(bikes[0], indent=2)
 
 client = redis.Redis(host="localhost", port=6379, decode_responses=True)
+print(type(client))
 
 res = client.ping()
 # >>> True

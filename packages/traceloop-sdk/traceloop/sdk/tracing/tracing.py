@@ -120,6 +120,7 @@ class TracerWrapper(object):
             if propagator:
                 set_global_textmap(propagator)
 
+            print("In tracer __new__. instruments: \n", instruments)
             instrument_set = False
             if instruments is None:
                 init_instrumentations(should_enrich_metrics)
@@ -562,7 +563,9 @@ def init_redis_instrumentor():
             exception_logger=lambda e: Telemetry().log_exception(e),
         )
         if not instrumentor.is_instrumented_by_opentelemetry:
+            print("We are in tracer init_redis_instrumentor(). Successfuly instanciated instrumentor\n")
             instrumentor.instrument()
+        print("We are in tracer init_redis_instrumentor(). instrumentor:\n", instrumentor)
     return True
 
 def init_qdrant_instrumentor():
