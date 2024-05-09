@@ -24,7 +24,7 @@ from sentence_transformers import SentenceTransformer
 from traceloop.sdk import Traceloop
 from traceloop.sdk.decorators import workflow
 
-Traceloop.init(app_name="redis_app")
+Traceloop.init(app_name="redis_app", disable_batch=True)
 
 url = "https://raw.githubusercontent.com/bsbodden/redis_vss_getting_started/main/data/bikes.json"
 response = requests.get(url)
