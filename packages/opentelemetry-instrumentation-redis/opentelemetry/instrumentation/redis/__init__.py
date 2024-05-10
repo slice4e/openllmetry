@@ -15,7 +15,7 @@ from wrapt import wrap_function_wrapper
 
 logger = logging.getLogger(__name__)
 
-_instruments = ("redis-client >= 1.0.1",)
+_instruments = ("redis >= 4.6.0",)
 
 
 WRAPPED_METHODS = [
@@ -26,10 +26,6 @@ WRAPPED_METHODS = [
         "span_name": "ping",
     },
 ]
-
-
-
-
 
 class RedisInstrumentor(BaseInstrumentor):
     """An instrumentor for Redis's client library."""
