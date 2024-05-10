@@ -51,7 +51,7 @@ def _wrap(tracer, to_wrap, wrapped, instance, args, kwargs):
         
         if response:
             span.add_event("redis.ping")
-            span.set_status(Status(StatusCode.OK))
+        #    span.set_status(Status(StatusCode.OK))
         
         _set_generic_span_attributes(span)
         
