@@ -33,13 +33,11 @@ class RedisInstrumentor(BaseInstrumentor):
     def __init__(self, exception_logger=None):
         super().__init__()
         Config.exception_logger = exception_logger
-        print("In instrumentation_redis __init__\n")
 
     def instrumentation_dependencies(self) -> Collection[str]:
         return _instruments
 
     def _instrument(self, **kwargs):
-        print("In instrumentation_redis _instrument\n")
         tracer_provider = kwargs.get("tracer_provider")
         tracer = get_tracer(__name__, __version__, tracer_provider)
         for wrapped_method in WRAPPED_METHODS:
@@ -54,7 +52,6 @@ class RedisInstrumentor(BaseInstrumentor):
                 )
 
     def _uninstrument(self, **kwargs):
-        print("In instrumentation_redis _uninstrument\n")
         for wrapped_method in WRAPPED_METHODS:
             wrap_package = wrapped_method.get("package")
             wrap_object = wrapped_method.get("object")

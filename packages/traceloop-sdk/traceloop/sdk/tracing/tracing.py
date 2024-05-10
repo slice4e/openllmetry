@@ -118,7 +118,6 @@ class TracerWrapper(object):
             if propagator:
                 set_global_textmap(propagator)
 
-            print("In tracer __new__. instruments: \n", instruments)
             instrument_set = False
             if instruments is None:
                 init_instrumentations(should_enrich_metrics)
@@ -154,7 +153,6 @@ class TracerWrapper(object):
                         else:
                             instrument_set = True
                     elif instrument == Instruments.REDIS:
-                        print("We are in tracer __new__\n")
                         if not init_redis_instrumentor():
                             print(
                                 Fore.RED + "Warning: Redis library does not exist."
@@ -510,7 +508,6 @@ def init_pinecone_instrumentor():
 
 def init_redis_instrumentor():
     if importlib.util.find_spec("redis") is not None:
-        print("We are in tracer init_redis_instrumentor()\n")
         Telemetry().capture("instrumentation:redis:init")
         from opentelemetry.instrumentation.redis import RedisInstrumentor
 
@@ -518,7 +515,6 @@ def init_redis_instrumentor():
             exception_logger=lambda e: Telemetry().log_exception(e),
         )
         if not instrumentor.is_instrumented_by_opentelemetry:
-            print("We are in tracer init_redis_instrumentor(). Successfully instantiated instrumentor: \n")
             instrumentor.instrument()
     return True
 

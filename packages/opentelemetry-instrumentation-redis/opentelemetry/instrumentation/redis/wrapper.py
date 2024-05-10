@@ -15,7 +15,6 @@ def _set_span_attribute(span, name, value):
 
 @dont_throw
 def _set_generic_span_attributes(span):
-    print("In _set_generic_span_attributes\n")
     _set_span_attribute(span, "redis.ping", 1)
 
 
@@ -34,24 +33,15 @@ def _with_tracer_wrapper(func):
 @_with_tracer_wrapper
 def _wrap(tracer, to_wrap, wrapped, instance, args, kwargs):
     """Instruments and calls every function defined in TO_WRAP."""
-    print("In _wrap\n")
     if context_api.get_value(_SUPPRESS_INSTRUMENTATION_KEY):
         return wrapped(*args, **kwargs)
 
     name = to_wrap.get("span_name")
-    print("span name: \n", name)
-    with tracer.start_as_current_span(name) as span:
-        # span.set_attribute(SpanAttributes.DB_SYSTEM, "redis")
-        # span.set_attribute(SpanAttributes.DB_OPERATION, to_wrap.get("method"))
-        
-        # _set_generic_span_attributes(span)
-        
+    with tracer.start_as_current_span(name) as span:      
         response = wrapped(*args, **kwargs)
-        print("response: \n", response)
         
         if response:
             span.add_event("redis.ping")
-        #    span.set_status(Status(StatusCode.OK))
         
         _set_generic_span_attributes(span)
         
