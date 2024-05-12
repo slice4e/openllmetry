@@ -9,6 +9,7 @@ from opentelemetry.trace import get_tracer
 
 import logging
 import redis
+import redis.commands.search
 from typing import Collection
 from wrapt import wrap_function_wrapper
 
@@ -17,13 +18,24 @@ logger = logging.getLogger(__name__)
 
 _instruments = ("redis >= 4.6.0",)
 
-
 WRAPPED_METHODS = [
     {
         "package": redis,
         "object": "Redis",
         "method": "ping",
         "span_name": "ping",
+    },
+    {
+        "package": redis.commands.search,
+        "object": "Search",
+        "method": "create_index",
+        "span_name": "create_index",
+    },
+    {
+        "package": redis.commands.search,
+        "object": "Search",
+        "method": "search",
+        "span_name": "search",
     },
 ]
 
