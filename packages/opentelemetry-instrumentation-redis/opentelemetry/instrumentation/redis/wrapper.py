@@ -4,7 +4,6 @@ from opentelemetry.instrumentation.utils import (
 )
 #from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry import context as context_api
-from redis.commands.search.query import Query
 
 
 def _set_span_attribute(span, name, value):
@@ -24,12 +23,7 @@ def _set_search_attributes(span, kwargs):
     _set_span_attribute(
         span,
         "redis.commands.search.query",
-        kwargs.get("Query"),
-    )
-    _set_span_attribute(
-        span,
-        "index",
-        kwargs.get("index"),
+        kwargs.get("query"),
     )
 
 @dont_throw
