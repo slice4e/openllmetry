@@ -18,6 +18,8 @@ def _set_generic_span_attributes(span):
     _set_span_attribute(span, "redis.generic", 1)
 
 # Assume that the first argument is the Query object and we extract the query string  
+# This approach works when the query string is not encoded using an embedding model. 
+# If the query string is encoded, we need to decode it to get the original query string.
 @dont_throw
 def _set_search_attributes(span, args):
     _set_span_attribute(
@@ -39,9 +41,13 @@ def _set_create_index_attributes(span, kwargs):
         kwargs.get("definition").__str__(),
     )
     
-# @dont_throw
-# def _add_query_result_events(span, kwargs):
-
+@dont_throw
+def _add_search_result_events(span, response):
+    _set_span_attribute(
+        span,
+        "redis.commands.search.result",
+        response.__str__()
+    )
 
 def _with_tracer_wrapper(func):
     """Helper for providing tracer for wrapper functions."""
@@ -63,10 +69,8 @@ def _wrap(tracer, to_wrap, wrapped, instance, args, kwargs):
         return wrapped(*args, **kwargs)
 
     name = to_wrap.get("span_name")
-    print("span name: ", name)
     with tracer.start_as_current_span(name) as span:  
 
-        print("method: ", to_wrap.get("method"))
         if to_wrap.get("method") == "search":
             _set_search_attributes(span, args)
         elif to_wrap.get("method") == "create_index":
@@ -76,8 +80,7 @@ def _wrap(tracer, to_wrap, wrapped, instance, args, kwargs):
             
         response = wrapped(*args, **kwargs)
         
-        #print("response", response)
-        # if to_wrap.get("method") == "search":
-        #     _add_search_result_events(span, response)
+        if to_wrap.get("method") == "search":
+            _add_search_result_events(span, response)
         
         return response
