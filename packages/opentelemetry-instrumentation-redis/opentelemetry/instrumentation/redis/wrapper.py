@@ -40,13 +40,24 @@ def _set_create_index_attributes(span, kwargs):
         "create_index",
         kwargs.get("definition").__str__(),
     )
-    
+
+# docs is a list. We could print out each separately.   
 @dont_throw
 def _add_search_result_events(span, response):
     _set_span_attribute(
         span,
-        "redis.commands.search.result",
-        response.__str__()
+        "redis.commands.search.total",
+        response.total
+    )
+    _set_span_attribute(
+        span,
+        "redis.commands.search.duration",
+        response.duration
+    )
+    _set_span_attribute(
+        span,
+        "redis.commands.search.docs",
+        response.docs.__str__()
     )
 
 def _with_tracer_wrapper(func):
