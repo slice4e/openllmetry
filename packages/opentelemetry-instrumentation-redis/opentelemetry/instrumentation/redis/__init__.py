@@ -24,19 +24,19 @@ WRAPPED_METHODS = [
         "package": redis,
         "object": "Redis",
         "method": "ping",
-        "span_name": "ping",
+        "span_name": "redis.ping",
     },
     {
         "package": redis.commands.search,
         "object": "Search",
         "method": "create_index",
-        "span_name": "create_index",
+        "span_name": "redis.create_index",
     },
     {
         "package": redis.commands.search,
         "object": "Search",
         "method": "search",
-        "span_name": "search",
+        "span_name": "redis.search",
     },
 ]
 
