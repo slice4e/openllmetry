@@ -32,12 +32,12 @@ def _set_search_attributes(span, args):
 def _set_create_index_attributes(span, kwargs):
     _set_span_attribute(
         span,
-        "create_index",
+        "redis.create_index.fields",
         kwargs.get("fields").__str__(),
     )
     _set_span_attribute(
         span,
-        "create_index",
+        "redis.create_index.definition",
         kwargs.get("definition").__str__(),
     )
 
