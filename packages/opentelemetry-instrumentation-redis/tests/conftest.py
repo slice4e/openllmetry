@@ -6,8 +6,7 @@ from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
-from opentelemetry.instrumentation.openai import OpenAIInstrumentor
-from opentelemetry.instrumentation.pinecone import PineconeInstrumentor
+from opentelemetry.instrumentation.redis import RedisInstrumentor
 
 pytest_plugins = []
 
@@ -21,8 +20,7 @@ def exporter():
     provider.add_span_processor(processor)
     trace.set_tracer_provider(provider)
 
-    OpenAIInstrumentor().instrument()
-    PineconeInstrumentor().instrument()
+    RedisInstrumentor().instrument()
 
     return exporter
 
@@ -30,15 +28,3 @@ def exporter():
 @pytest.fixture(autouse=True)
 def clear_exporter(exporter):
     exporter.clear()
-
-
-@pytest.fixture(autouse=True)
-def environment():
-    os.environ["OPENAI_API_KEY"] = "test_api_key"
-    os.environ["PINECONE_API_KEY"] = "test_api_key"
-    os.environ["PINECONE_ENVIRONMENT"] = "gcp-starter"
-
-
-@pytest.fixture(scope="module")
-def vcr_config():
-    return {"filter_headers": ["authorization"]}
