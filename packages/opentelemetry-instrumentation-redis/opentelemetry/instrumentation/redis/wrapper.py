@@ -19,7 +19,7 @@ def _set_generic_span_attributes(span):
 
 # Assume that the first argument is the Query object and we extract the query string  
 # This approach works when the query string is not encoded using an embedding model. 
-# If the query string is encoded, we need to decode it to get the original query string.
+# If the query string is encoded, then we are unable to get the query
 @dont_throw
 def _set_search_attributes(span, args):
     _set_span_attribute(
@@ -41,7 +41,7 @@ def _set_create_index_attributes(span, kwargs):
         kwargs.get("definition").__str__(),
     )
 
-# docs is a list. We could print out each separately.   
+
 @dont_throw
 def _add_search_result_events(span, response):
     _set_span_attribute(
@@ -54,11 +54,14 @@ def _add_search_result_events(span, response):
         "redis.commands.search.duration",
         response.duration
     )
-    _set_span_attribute(
-        span,
-        "redis.commands.search.docs",
-        response.docs.__str__()
-    )
+    # Iterate through each document in response.docs
+    # and set a span attribute for each document
+    for index, doc in enumerate(response.docs):
+        _set_span_attribute(
+            span,
+            f"redis.commands.search.xdoc_{index}",
+            doc.__str__()
+        )
 
 def _with_tracer_wrapper(func):
     """Helper for providing tracer for wrapper functions."""
