@@ -7,7 +7,7 @@ from redis.commands.search.indexDefinition import IndexDefinition, IndexType
 from redis.commands.search.query import Query
 from openai import OpenAI
 from traceloop.sdk import Traceloop
-from traceloop.sdk.decorators import workflow
+from traceloop.sdk.decorators import workflow, task
 
 
 INDEX_NAME = "index"
@@ -21,21 +21,21 @@ rc = Redis(host="localhost", port=6379, decode_responses=True)
 assert rc.ping() == True, "Cannot connect to Redis"
 
 
-@workflow("load_data_from_file")
+@task("load_data_from_file")
 def load_data():
     with open("data/sherlock/firstchapter.txt") as firstchapter_file:
         data = firstchapter_file.readlines()
     return data
 
 
-@workflow("prepare_embeddings")
+@task("prepare_embeddings")
 def prepare_embeddings(data):
     response = client.embeddings.create(input=data, model="text-embedding-3-small")
     embeddings = np.array([r["embedding"] for r in response.to_dict()["data"]], dtype=np.float32)
     return embeddings
 
 
-@workflow("upload_data_to_redis")
+@task("upload_data_to_redis")
 def upload_data_to_redis(data, embeddings):
     pipe = rc.pipeline()
     for i, embedding in enumerate(embeddings):
@@ -47,7 +47,7 @@ def upload_data_to_redis(data, embeddings):
     pipe.execute()
 
 
-@workflow("create_index")
+@task("create_index")
 def create_index():
     try:
         rc.ft(INDEX_NAME).info()
@@ -67,7 +67,7 @@ def create_index():
         rc.ft(INDEX_NAME).create_index(fields=schema, definition=definition)
 
 
-@workflow("run_query")
+@task("run_query")
 def query_redis(query_embeddings):
     query = (
         Query("(@tag:{ openai })=>[KNN 2 @vector $vec as score]")
@@ -82,7 +82,7 @@ def query_redis(query_embeddings):
     return relevant_content
 
 
-@workflow("get_response_from_openai")
+@task("get_response_from_openai")
 def get_response_from_openai(query, relevant_content):
     messages = [
         {
@@ -107,12 +107,16 @@ Narrator in the book is doctor Watson. User will provide you a relevant content 
     print()
 
 
-data = load_data()
-embeddings = prepare_embeddings(data)
-upload_data_to_redis(data, embeddings)
-create_index()
-#query = "In what year and which university did doctor Watson graduate?"
-query = "Who introduced Sherlock Holmes to doctor Watson?"
-query_emb = prepare_embeddings(query)[0]
-relevant_content = query_redis(query_emb)
-get_response_from_openai(query, relevant_content)
+@workflow("redis_rag_app")
+def main():
+    data = load_data()
+    embeddings = prepare_embeddings(data)
+    upload_data_to_redis(data, embeddings)
+    create_index()
+    #query = "In what year and which university did doctor Watson graduate?"
+    query = "Who introduced Sherlock Holmes to doctor Watson?"
+    query_emb = prepare_embeddings(query)[0]
+    relevant_content = query_redis(query_emb)
+    get_response_from_openai(query, relevant_content)
+
+main()
