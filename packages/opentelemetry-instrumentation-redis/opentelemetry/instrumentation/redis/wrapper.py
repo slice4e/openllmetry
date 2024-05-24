@@ -44,7 +44,6 @@ def _set_hset_attributes(span, args, kwargs):
 
 @dont_throw
 def _set_json_set_attributes(span, args, kwargs):
-    print(kwargs)
     name = kwargs.get("name") or _args_or_none(args, 0)
     path = kwargs.get("path") or _args_or_none(args, 1)
     obj = kwargs.get("obj") or _args_or_none(args, 2)
@@ -62,6 +61,15 @@ def _set_search_attributes(span, args):
         span,
         "redis.commands.search.query",
         args[0].query_string(),
+    )
+
+
+@dont_throw
+def _set_aggregate_attributes(span, args):
+    _set_span_attribute(
+        span,
+        "redis.commands.aggregate.query",
+        args[0]._query,
     )
 
 
@@ -101,6 +109,15 @@ def _add_search_result_events(span, response):
         )
 
 
+@dont_throw
+def _add_aggregate_result_events(span, response):
+    _set_span_attribute(
+        span,
+        "redis.commands.aggregate.results",
+        str(response.rows)
+    )
+
+
 def _with_tracer_wrapper(func):
     """Helper for providing tracer for wrapper functions."""
 
@@ -131,6 +148,8 @@ def _wrap(tracer, to_wrap, wrapped, instance, args, kwargs):
             _set_hset_attributes(span, args, kwargs)
         elif to_wrap.get("method") == "set":
             _set_json_set_attributes(span, args, kwargs)
+        elif to_wrap.get("method") == "aggregate":
+            _set_aggregate_attributes(span, args)
         else:
             _set_generic_span_attributes(span)
             
@@ -138,5 +157,7 @@ def _wrap(tracer, to_wrap, wrapped, instance, args, kwargs):
         
         if to_wrap.get("method") == "search":
             _add_search_result_events(span, response)
+        elif to_wrap.get("method") == "aggregate":
+            _add_aggregate_result_events(span, response)
         
         return response
