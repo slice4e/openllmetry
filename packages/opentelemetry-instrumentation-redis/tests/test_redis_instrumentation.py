@@ -3,6 +3,7 @@ import numpy as np
 from redis import Redis
 from redis.exceptions import ResponseError
 from redis.commands.search.indexDefinition import IndexDefinition, IndexType
+from redis.commands.search.aggregation import AggregateRequest
 from redis.commands.search.query import Query
 from redis.commands.search.field import (
     TextField,
@@ -84,6 +85,30 @@ def test_redis_json_set(redis_client, exporter):
     assert span.attributes.get("redis.json.set.name") == name
     assert span.attributes.get("redis.json.set.path") == path
     assert span.attributes.get("redis.json.set.object") == str(item)
+
+
+def test_redis_aggregate(redis_client, exporter):
+    name = "test:001"
+    path = "$"
+    item = {"name": "test_name",
+            "value": "test_value"}
+    redis_client.json().set(name, path, item)
+    schema = (
+        TextField("$.name", no_stem=True, as_name="name"),
+        TextField("$.value", no_stem=True, as_name="value"),
+    )
+    try:
+        redis_client.ft("idx:test").dropindex(True)
+    except ResponseError:
+        print("No such index")
+    definition = IndexDefinition(prefix=["test:"], index_type=IndexType.JSON)
+    redis_client.ft("idx:test").create_index(fields=schema, definition=definition)
+    query = "*"
+    redis_client.ft("idx:test").aggregate(AggregateRequest(query).load())
+    spans = exporter.get_finished_spans()
+    span = next(span for span in spans if span.name == "redis.aggregate")
+    assert span.attributes.get("redis.commands.aggregate.query") == query
+    assert "redis.commands.aggregate.results" in span.attributes
 
 
 def test_redis_create_index(redis_client, exporter):
