@@ -13,9 +13,45 @@ def _set_span_attribute(span, name, value):
             span.set_attribute(name, value)
     return
 
+
+def _args_or_none(args, n):
+    try:
+        return args[n]
+    except IndexError:
+        return None
+
+
 @dont_throw
 def _set_generic_span_attributes(span):
     _set_span_attribute(span, "redis.generic", 1)
+
+
+@dont_throw
+def _set_hset_attributes(span, args, kwargs):
+    hash_name = kwargs.get("name") or _args_or_none(args, 0)
+    key = kwargs.get("key") or _args_or_none(args, 1)
+    value = kwargs.get("value") or _args_or_none(args, 2)
+    mapping = kwargs.get("mapping") or _args_or_none(args, 3)
+    # If mapping exists then change dict to string to be able to add it as attribute
+    if mapping:
+        mapping = str(mapping)
+
+    _set_span_attribute(span, "redis.hash.name", hash_name)
+    _set_span_attribute(span, "redis.hash.key", key)
+    _set_span_attribute(span, "redis.hash.value", value)
+    _set_span_attribute(span, "redis.hash.mapping", mapping)
+
+
+@dont_throw
+def _set_json_set_attributes(span, args, kwargs):
+    print(kwargs)
+    name = kwargs.get("name") or _args_or_none(args, 0)
+    path = kwargs.get("path") or _args_or_none(args, 1)
+    obj = kwargs.get("obj") or _args_or_none(args, 2)
+    _set_span_attribute(span, "redis.json.set.name", name)
+    _set_span_attribute(span, "redis.json.set.path", path)
+    _set_span_attribute(span, "redis.json.set.object", str(obj))
+
 
 # Assume that the first argument is the Query object and we extract the query string  
 # This approach works when the query string is not encoded using an embedding model. 
@@ -27,6 +63,7 @@ def _set_search_attributes(span, args):
         "redis.commands.search.query",
         args[0].query_string(),
     )
+
 
 @dont_throw
 def _set_create_index_attributes(span, kwargs):
@@ -63,6 +100,7 @@ def _add_search_result_events(span, response):
             doc.__str__()
         )
 
+
 def _with_tracer_wrapper(func):
     """Helper for providing tracer for wrapper functions."""
 
@@ -89,6 +127,10 @@ def _wrap(tracer, to_wrap, wrapped, instance, args, kwargs):
             _set_search_attributes(span, args)
         elif to_wrap.get("method") == "create_index":
             _set_create_index_attributes(span, kwargs)
+        elif to_wrap.get("method") == "hset":
+            _set_hset_attributes(span, args, kwargs)
+        elif to_wrap.get("method") == "set":
+            _set_json_set_attributes(span, args, kwargs)
         else:
             _set_generic_span_attributes(span)
             
