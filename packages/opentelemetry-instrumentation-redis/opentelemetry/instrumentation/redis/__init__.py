@@ -10,6 +10,7 @@ from opentelemetry.trace import get_tracer
 import logging
 import redis
 import redis.commands.search
+import redis.commands.json
 from typing import Collection
 from wrapt import wrap_function_wrapper
 
@@ -27,6 +28,12 @@ WRAPPED_METHODS = [
         "span_name": "redis.ping",
     },
     {
+        "package": redis,
+        "object": "Redis",
+        "method": "hset",
+        "span_name": "redis.hset",
+    },
+    {
         "package": redis.commands.search,
         "object": "Search",
         "method": "create_index",
@@ -38,6 +45,19 @@ WRAPPED_METHODS = [
         "method": "search",
         "span_name": "redis.search",
     },
+    {
+        "package": redis.commands.search,
+        "object": "Search",
+        "method": "aggregate",
+        "span_name": "redis.aggregate",
+    },
+    {
+        "package": redis.commands.json,
+        "object": "JSON",
+        "method": "set",
+        "span_name": "redis.json.set",
+    },
+
 ]
 
 class RedisInstrumentor(BaseInstrumentor):
