@@ -1,6 +1,6 @@
 import os
 import pytest
-import pinecone
+from pinecone import Pinecone
 from openai import OpenAI
 
 
@@ -30,7 +30,7 @@ def retrieve(openai_client, index, query):
             break
         elif i == len(contexts) - 1:
             prompt = prompt_start + "\n\n---\n\n".join(contexts) + prompt_end
-    return prompt
+    return prompt, res
 
 
 def complete(openai_client, prompt):
@@ -48,19 +48,20 @@ def complete(openai_client, prompt):
 
 
 def run_query(openai_client, index, query: str):
-    query_with_contexts = retrieve(openai_client, index, query)
+    query_with_contexts, query_res = retrieve(openai_client, index, query)
     complete(openai_client, query_with_contexts)
+    return query_res
 
 
 @pytest.mark.skip(
-    "GRPC package of Pinecone is conflicting with google-cloud-aiplatform"
+    "Can't record GRPC-based tests with VCR, as it doesn't support recording GRPC requests."
 )
-def test_pinecone_grpc_retrieval(exporter, openai_client):
-    pinecone.init(
+def test_pinecone_grpc_retrieval(traces_exporter, openai_client):
+    pc = Pinecone(
         api_key=os.getenv("PINECONE_API_KEY"),
         environment=os.getenv("PINECONE_ENVIRONMENT"),
     )
-    index = pinecone.GRPCIndex("gen-qa-openai-fast")
+    index = pc.create_index("gen-qa-openai-fast")
 
     query = (
         "Which training method should I use for sentence transformers when "
@@ -68,7 +69,7 @@ def test_pinecone_grpc_retrieval(exporter, openai_client):
     )
     run_query(openai_client, index, query)
 
-    spans = exporter.get_finished_spans()
+    spans = traces_exporter.get_finished_spans()
     assert [span.name for span in spans] == [
         "openai.embeddings",
         "pinecone.query",
@@ -77,20 +78,20 @@ def test_pinecone_grpc_retrieval(exporter, openai_client):
 
 
 @pytest.mark.vcr
-def test_pinecone_retrieval(exporter, openai_client):
-    pinecone.init(
+def test_pinecone_retrieval(traces_exporter, metrics_reader, openai_client):
+    pc = Pinecone(
         api_key=os.getenv("PINECONE_API_KEY"),
         environment=os.getenv("PINECONE_ENVIRONMENT"),
     )
-    index = pinecone.Index("gen-qa-openai-fast")
+    index = pc.Index("gen-qa-openai-fast")
 
     query = (
         "Which training method should I use for sentence transformers when "
         + "I only have pairs of related sentences?"
     )
-    run_query(openai_client, index, query)
+    query_res = run_query(openai_client, index, query)
 
-    spans = exporter.get_finished_spans()
+    spans = traces_exporter.get_finished_spans()
     assert [span.name for span in spans] == [
         "openai.embeddings",
         "pinecone.query",
@@ -98,7 +99,13 @@ def test_pinecone_retrieval(exporter, openai_client):
     ]
 
     span = next(span for span in spans if span.name == "pinecone.query")
+    assert (
+        span.attributes.get("server.address")
+        == "https://gen-qa-openai-fast-90c5d9e.svc.gcp-starter.pinecone.io"
+    )
     assert span.attributes.get("pinecone.query.top_k") == 3
+    assert span.attributes.get("pinecone.usage.read_units") == 6
+    assert span.attributes.get("pinecone.usage.write_units") == 0
     assert span.attributes.get("pinecone.query.include_values")
     assert span.attributes.get("pinecone.query.include_metadata")
 
@@ -114,14 +121,6 @@ def test_pinecone_retrieval(exporter, openai_client):
         assert len(vector) > 100
         for v in vector:
             assert v >= -1 and v <= 1
-
-    usage_events = [
-        event for event in span.events if "pinecone.query.usage" in event.name
-    ]
-    assert len(usage_events) == 1
-    usage_event = usage_events[0]
-    assert usage_event.name == "pinecone.query.usage"
-    assert usage_event.attributes.get("readUnits") >= 0
 
     query_result_events = [
         event for event in span.events if "db.pinecone.query.result" in event.name
@@ -139,3 +138,55 @@ def test_pinecone_retrieval(exporter, openai_client):
         assert len(vector) > 100
         for v in vector:
             assert v >= -1 and v <= 1
+
+    metrics_data = metrics_reader.get_metrics_data()
+    resource_metrics = metrics_data.resource_metrics
+    assert len(resource_metrics) > 0
+
+    found_query_duration_metric = False
+    found_scores_metric = False
+    found_read_units_metric = False
+    found_write_units_metric = False
+
+    for rm in resource_metrics:
+        for sm in rm.scope_metrics:
+            for metric in sm.metrics:
+
+                if metric.name == "db.pinecone.query.duration":
+                    found_query_duration_metric = True
+                    for data_point in metric.data.data_points:
+                        assert data_point.sum > 0
+
+                if metric.name == "db.pinecone.query.scores":
+                    found_scores_metric = True
+                    for data_point in metric.data.data_points:
+                        assert data_point.sum == sum(
+                            match.get("score") for match in query_res.get("matches")
+                        )
+                        assert (
+                            data_point.attributes["server.address"]
+                            == "https://gen-qa-openai-fast-90c5d9e.svc.gcp-starter.pinecone.io"
+                        )
+
+                if metric.name == "db.pinecone.usage.read_units":
+                    found_read_units_metric = True
+                    for data_point in metric.data.data_points:
+                        assert data_point.value == 6
+                        assert (
+                            data_point.attributes["server.address"]
+                            == "https://gen-qa-openai-fast-90c5d9e.svc.gcp-starter.pinecone.io"
+                        )
+
+                if metric.name == "db.pinecone.usage.write_units":
+                    found_write_units_metric = True
+                    for data_point in metric.data.data_points:
+                        assert data_point.value == 0
+                        assert (
+                            data_point.attributes["server.address"]
+                            == "https://gen-qa-openai-fast-90c5d9e.svc.gcp-starter.pinecone.io"
+                        )
+
+    assert found_query_duration_metric is True
+    assert found_scores_metric is True
+    assert found_read_units_metric is True
+    assert found_write_units_metric is True

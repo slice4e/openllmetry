@@ -110,8 +110,10 @@ def _set_input_attributes(span, kwargs):
     set_span_attribute(
         span, SpanAttributes.LLM_REQUEST_MAX_TOKENS, kwargs.get("max_tokens_to_sample")
     )
-    set_span_attribute(span, SpanAttributes.LLM_TEMPERATURE, kwargs.get("temperature"))
-    set_span_attribute(span, SpanAttributes.LLM_TOP_P, kwargs.get("top_p"))
+    set_span_attribute(
+        span, SpanAttributes.LLM_REQUEST_TEMPERATURE, kwargs.get("temperature")
+    )
+    set_span_attribute(span, SpanAttributes.LLM_REQUEST_TOP_P, kwargs.get("top_p"))
     set_span_attribute(
         span, SpanAttributes.LLM_FREQUENCY_PENALTY, kwargs.get("frequency_penalty")
     )
@@ -167,18 +169,19 @@ async def _aset_token_usage(
         response = response.__dict__
 
     prompt_tokens = 0
-    if request.get("prompt"):
-        prompt_tokens = await anthropic.count_tokens(request.get("prompt"))
-    elif request.get("messages"):
-        prompt_tokens = sum(
-            [
-                await anthropic.count_tokens(m.get("content"))
-                for m in request.get("messages")
-            ]
-        )
+    if hasattr(anthropic, "count_tokens"):
+        if request.get("prompt"):
+            prompt_tokens = await anthropic.count_tokens(request.get("prompt"))
+        elif request.get("messages"):
+            prompt_tokens = sum(
+                [
+                    await anthropic.count_tokens(m.get("content"))
+                    for m in request.get("messages")
+                ]
+            )
 
     if token_counter and type(prompt_tokens) is int and prompt_tokens >= 0:
-        token_counter.add(
+        token_counter.record(
             prompt_tokens,
             attributes={
                 **metric_attributes,
@@ -187,15 +190,16 @@ async def _aset_token_usage(
         )
 
     completion_tokens = 0
-    if response.get("completion"):
-        completion_tokens = await anthropic.count_tokens(response.get("completion"))
-    elif response.get("content"):
-        completion_tokens = await anthropic.count_tokens(
-            response.get("content")[0].text
-        )
+    if hasattr(anthropic, "count_tokens"):
+        if response.get("completion"):
+            completion_tokens = await anthropic.count_tokens(response.get("completion"))
+        elif response.get("content"):
+            completion_tokens = await anthropic.count_tokens(
+                response.get("content")[0].text
+            )
 
     if token_counter and type(completion_tokens) is int and completion_tokens >= 0:
-        token_counter.add(
+        token_counter.record(
             completion_tokens,
             attributes={
                 **metric_attributes,
@@ -241,15 +245,19 @@ def _set_token_usage(
         response = response.__dict__
 
     prompt_tokens = 0
-    if request.get("prompt"):
-        prompt_tokens = anthropic.count_tokens(request.get("prompt"))
-    elif request.get("messages"):
-        prompt_tokens = sum(
-            [anthropic.count_tokens(m.get("content")) for m in request.get("messages")]
-        )
+    if hasattr(anthropic, "count_tokens"):
+        if request.get("prompt"):
+            prompt_tokens = anthropic.count_tokens(request.get("prompt"))
+        elif request.get("messages"):
+            prompt_tokens = sum(
+                [
+                    anthropic.count_tokens(m.get("content"))
+                    for m in request.get("messages")
+                ]
+            )
 
     if token_counter and type(prompt_tokens) is int and prompt_tokens >= 0:
-        token_counter.add(
+        token_counter.record(
             prompt_tokens,
             attributes={
                 **metric_attributes,
@@ -258,13 +266,14 @@ def _set_token_usage(
         )
 
     completion_tokens = 0
-    if response.get("completion"):
-        completion_tokens = anthropic.count_tokens(response.get("completion"))
-    elif response.get("content"):
-        completion_tokens = anthropic.count_tokens(response.get("content")[0].text)
+    if hasattr(anthropic, "count_tokens"):
+        if response.get("completion"):
+            completion_tokens = anthropic.count_tokens(response.get("completion"))
+        elif response.get("content"):
+            completion_tokens = anthropic.count_tokens(response.get("content")[0].text)
 
     if token_counter and type(completion_tokens) is int and completion_tokens >= 0:
-        token_counter.add(
+        token_counter.record(
             completion_tokens,
             attributes={
                 **metric_attributes,
@@ -362,20 +371,20 @@ def _with_chat_telemetry_wrapper(func):
 
 
 def _create_metrics(meter: Meter, name: str):
-    token_counter = meter.create_counter(
-        name=f"llm.{name}.tokens",
+    token_counter = meter.create_histogram(
+        name="gen_ai.client.token.usage",
         unit="token",
         description="Number of tokens used in prompt and completions",
     )
 
     choice_counter = meter.create_counter(
-        name=f"llm.{name}.choices",
+        name="gen_ai.client.generation.choices",
         unit="choice",
         description="Number of choices returned by chat completions call",
     )
 
     duration_histogram = meter.create_histogram(
-        name=f"llm.{name}.duration",
+        name="gen_ai.client.operation.duration",
         unit="s",
         description="Duration of chat completion operation",
     )
@@ -394,7 +403,7 @@ def _calculate_metrics_attributes(response):
     if not isinstance(response, dict):
         response = response.__dict__
     return {
-        "llm.response.model": response.get("model"),
+        "gen_ai.response.model": response.get("model"),
     }
 
 
@@ -420,7 +429,7 @@ def _wrap(
         name,
         kind=SpanKind.CLIENT,
         attributes={
-            SpanAttributes.LLM_VENDOR: "Anthropic",
+            SpanAttributes.LLM_SYSTEM: "Anthropic",
             SpanAttributes.LLM_REQUEST_TYPE: LLMRequestTypeValues.COMPLETION.value,
         },
     )
@@ -516,7 +525,7 @@ async def _awrap(
         name,
         kind=SpanKind.CLIENT,
         attributes={
-            SpanAttributes.LLM_VENDOR: "Anthropic",
+            SpanAttributes.LLM_SYSTEM: "Anthropic",
             SpanAttributes.LLM_REQUEST_TYPE: LLMRequestTypeValues.COMPLETION.value,
         },
     )

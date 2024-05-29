@@ -1,3 +1,4 @@
+import json
 import pytest
 from langchain.prompts import PromptTemplate
 from langchain.prompts import ChatPromptTemplate
@@ -10,7 +11,9 @@ from langchain_community.utils.openai_functions import (
 from langchain_community.llms.huggingface_text_gen_inference import (
     HuggingFaceTextGenInference,
 )
-from langchain_community.chat_models import BedrockChat, ChatOpenAI, ChatAnthropic
+from langchain_community.chat_models import BedrockChat
+from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
 from langchain_core.pydantic_v1 import BaseModel, Field
 import boto3
 
@@ -65,6 +68,76 @@ def test_simple_lcel(exporter):
     assert chat_openai_task_span.parent.span_id == workflow_span.context.span_id
     assert output_parser_task_span.parent.span_id == workflow_span.context.span_id
 
+    assert json.loads(workflow_span.attributes["traceloop.entity.input"]) == {
+        "args": [],
+        "kwargs": {
+            "input": "tell me a short joke",
+            "run_name": "ThisIsATestChain",
+            "tags": [
+                "test_tag"
+            ],
+        },
+    }
+    assert json.loads(workflow_span.attributes["traceloop.entity.output"]) == {
+        "setup": "Why couldn't the bicycle stand up by itself?",
+        "punchline": "It was two tired!",
+    }
+    assert json.loads(prompt_task_span.attributes["traceloop.entity.input"]) == {
+        "args": [],
+        "kwargs": {
+            "input": "tell me a short joke",
+            "tags": [
+                "test_tag"
+            ],
+            "metadata": {},
+            "recursion_limit": 25,
+            "configurable": {},
+        },
+    }
+
+    assert (json.loads(prompt_task_span.attributes["traceloop.entity.output"]) == {
+        "lc": 1,
+        "type": "constructor",
+        "id": [
+            "langchain",
+            "prompts",
+            "chat",
+            "ChatPromptValue"
+        ],
+        "kwargs": {
+            "messages": [
+                {
+                    "lc": 1,
+                    "type": "constructor",
+                    "id": [
+                        "langchain",
+                        "schema",
+                        "messages",
+                        "SystemMessage"
+                    ],
+                    "kwargs": {
+                        "content": "You are helpful assistant",
+                        "type": "system"
+                    }
+                },
+                {
+                    "lc": 1,
+                    "type": "constructor",
+                    "id": [
+                        "langchain",
+                        "schema",
+                        "messages",
+                        "HumanMessage"
+                    ],
+                    "kwargs": {
+                        "content": "tell me a short joke",
+                        "type": "human"
+                    }
+                }
+            ]
+        }
+    })
+
 
 @pytest.mark.vcr
 @pytest.mark.asyncio
@@ -79,7 +152,7 @@ async def test_async_lcel(exporter):
         "write 10 lines of random text about ${product}"
     )
     runnable = prompt | chat | StrOutputParser()
-    await runnable.ainvoke({"product": "colorful socks"})
+    response = await runnable.ainvoke({"product": "colorful socks"})
 
     spans = exporter.get_finished_spans()
 
@@ -105,6 +178,14 @@ async def test_async_lcel(exporter):
 
     assert chat_openai_task_span.parent.span_id == workflow_span.context.span_id
     assert output_parser_task_span.parent.span_id == workflow_span.context.span_id
+
+    assert json.loads(workflow_span.attributes["traceloop.entity.input"]) == {
+        "args": [],
+        "kwargs": {
+            "product": "colorful socks",
+        },
+    }
+    assert workflow_span.attributes["traceloop.entity.output"] == response
 
 
 @pytest.mark.vcr
@@ -159,14 +240,14 @@ def test_custom_llm(exporter):
 
     assert hugging_face_span.attributes["llm.request.type"] == "completion"
     assert (
-        hugging_face_span.attributes["llm.request.model"]
+        hugging_face_span.attributes["gen_ai.request.model"]
         == "HuggingFaceTextGenInference"
     )
     assert (
-        hugging_face_span.attributes["llm.prompts.0.user"]
+        hugging_face_span.attributes["gen_ai.prompt.0.user"]
         == "System: You are a helpful assistant\nHuman: tell me a short joke"
     )
-    assert hugging_face_span.attributes["llm.completions.0.content"] == response
+    assert hugging_face_span.attributes["gen_ai.completion.0.content"] == response
 
 
 @pytest.mark.vcr
@@ -194,18 +275,19 @@ def test_openai(exporter):
     )
 
     assert openai_span.attributes["llm.request.type"] == "chat"
-    assert openai_span.attributes["llm.request.model"] == "gpt-3.5-turbo"
+    assert openai_span.attributes["gen_ai.request.model"] == "gpt-3.5-turbo"
     assert (
-        openai_span.attributes["llm.prompts.0.content"] == "You are a helpful assistant"
+        openai_span.attributes["gen_ai.prompt.0.content"]
+        == "You are a helpful assistant"
     )
-    assert openai_span.attributes["llm.prompts.0.role"] == "system"
+    assert openai_span.attributes["gen_ai.prompt.0.role"] == "system"
     assert (
-        openai_span.attributes["llm.prompts.1.content"]
+        openai_span.attributes["gen_ai.prompt.1.content"]
         == "Tell me a joke about OpenTelemetry"
     )
-    assert openai_span.attributes["llm.prompts.1.role"] == "user"
+    assert openai_span.attributes["gen_ai.prompt.1.role"] == "user"
     assert (
-        openai_span.attributes["llm.completions.0.content"]
+        openai_span.attributes["gen_ai.completion.0.content"]
         == response.generations[0][0].text
     )
 
@@ -215,7 +297,7 @@ def test_anthropic(exporter):
     prompt = ChatPromptTemplate.from_messages(
         [("system", "You are a helpful assistant"), ("user", "{input}")]
     )
-    model = ChatAnthropic(model="claude-2")
+    model = ChatAnthropic(model="claude-2.1")
 
     chain = prompt | model
     response = chain.invoke({"input": "tell me a short joke"})
@@ -233,12 +315,12 @@ def test_anthropic(exporter):
     )
 
     assert anthropic_span.attributes["llm.request.type"] == "chat"
-    assert anthropic_span.attributes["llm.request.model"] == "claude-2"
+    assert anthropic_span.attributes["gen_ai.request.model"] == "claude-2.1"
     assert (
-        anthropic_span.attributes["llm.prompts.0.content"]
+        anthropic_span.attributes["gen_ai.prompt.0.content"]
         == "You are a helpful assistant"
     )
-    assert anthropic_span.attributes["llm.completions.0.content"] == response.content
+    assert anthropic_span.attributes["gen_ai.completion.0.content"] == response.content
 
 
 @pytest.mark.vcr
@@ -264,6 +346,7 @@ def test_bedrock(exporter):
 
     assert [
         "ChatPromptTemplate.langchain.task",
+        "bedrock.completion",
         "BedrockChat.langchain.task",
         "RunnableSequence.langchain.workflow",
     ] == [span.name for span in spans]
@@ -274,11 +357,11 @@ def test_bedrock(exporter):
 
     assert bedrock_span.attributes["llm.request.type"] == "chat"
     assert (
-        bedrock_span.attributes["llm.request.model"]
+        bedrock_span.attributes["gen_ai.request.model"]
         == "anthropic.claude-3-haiku-20240307-v1:0"
     )
     assert (
-        bedrock_span.attributes["llm.prompts.0.content"]
+        bedrock_span.attributes["gen_ai.prompt.0.content"]
         == "You are a helpful assistant"
     )
-    assert bedrock_span.attributes["llm.completions.0.content"] == response.content
+    assert bedrock_span.attributes["gen_ai.completion.0.content"] == response.content

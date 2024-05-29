@@ -3,11 +3,18 @@ from contextlib import asynccontextmanager
 import logging
 import os
 
+import openai
 from opentelemetry.instrumentation.openai.shared.config import Config
 
 
 def is_openai_v1():
     return version("openai") >= "1.0.0"
+
+
+def is_azure_openai(instance):
+    return is_openai_v1() and isinstance(
+        instance._client, (openai.AsyncAzureOpenAI, openai.AzureOpenAI)
+    )
 
 
 def is_metrics_enabled() -> bool:
@@ -116,7 +123,9 @@ def dont_throw(func):
         try:
             return func(*args, **kwargs)
         except Exception as e:
-            logger.warning("Failed to execute %s, error: %s", func.__name__, str(e))
+            logger.debug(
+                "OpenLLMetry failed to trace in %s, error: %s", func.__name__, str(e)
+            )
             if Config.exception_logger:
                 Config.exception_logger(e)
 
