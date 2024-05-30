@@ -25,8 +25,8 @@ from traceloop.sdk import Traceloop
 from traceloop.sdk.decorators import workflow
 from opentelemetry.sdk.trace.export import ConsoleSpanExporter
 
-Traceloop.init(exporter=ConsoleSpanExporter())
-#Traceloop.init(app_name="redis", disable_batch=True)
+#Traceloop.init(exporter=ConsoleSpanExporter())
+Traceloop.init(app_name="redis", disable_batch=True)
 
 url = "https://raw.githubusercontent.com/bsbodden/redis_vss_getting_started/main/data/bikes.json"
 response = requests.get(url)
