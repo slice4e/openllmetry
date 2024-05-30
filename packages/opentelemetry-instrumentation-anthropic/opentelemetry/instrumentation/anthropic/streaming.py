@@ -52,7 +52,7 @@ def _set_token_usage(
     )
 
     if token_counter and type(prompt_tokens) is int and prompt_tokens >= 0:
-        token_counter.add(
+        token_counter.record(
             prompt_tokens,
             attributes={
                 **metric_attributes,
@@ -61,7 +61,7 @@ def _set_token_usage(
         )
 
     if token_counter and type(completion_tokens) is int and completion_tokens >= 0:
-        token_counter.add(
+        token_counter.record(
             completion_tokens,
             attributes={
                 **metric_attributes,
@@ -122,7 +122,7 @@ def build_from_streaming_response(
         _process_response_item(item, complete_response)
 
     metric_attributes = {
-        "llm.response.model": complete_response.get("model"),
+        "gen_ai.response.model": complete_response.get("model"),
     }
 
     if duration_histogram:
@@ -205,7 +205,7 @@ async def abuild_from_streaming_response(
         _process_response_item(item, complete_response)
 
     metric_attributes = {
-        "llm.response.model": complete_response.get("model"),
+        "gen_ai.response.model": complete_response.get("model"),
     }
 
     if duration_histogram:

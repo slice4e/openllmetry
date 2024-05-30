@@ -1,3 +1,145 @@
+## v0.21.0 (2024-05-27)
+
+### Feat
+
+- **vertexai**: `vertexai.generative_models` / `llm_model` detection (#1141)
+
+### Fix
+
+- **bedrock**: support simple string in prompts (#1167)
+- **langchain**: stringification fails for lists of LangChain `Documents` (#1140)
+
+## v0.20.0 (2024-05-26)
+
+### Feat
+
+- **mistral**: implement instrumentation (#1139)
+- **ollama**: implement instrumentation (#1138)
+
+### Fix
+
+- **anthropic**: don't fail if can't count anthropic tokens (#1142)
+- **ollama**: proper unwrapping; limit instrumentations to versions <1
+- **bedrock**: instrument bedrock calls for Langchain (with session) (#1135)
+
+## v0.19.0 (2024-05-22)
+
+### Feat
+
+- **milvus**: add Milvus instrumentation (#1068)
+
+### Fix
+
+- add explicit buckets to pinecone histograms (#1129)
+- **pinecone**: backport to v2.2.2 (#1122)
+- llm metrics naming + views (#1121)
+- **langchain**: better serialization of inputs and outputs (#1120)
+- **sdk**: failsafe against instrumentation initialization errors (#1117)
+- **sdk**: instrument milvus (#1116)
+
+## v0.18.2 (2024-05-17)
+
+### Fix
+
+- **openai**: old streaming handling for backward compatibility with OpenAI v0 (#1064)
+- **openai**: report fingerprint from response (#1066)
+- **sdk**: special handling for metrics with custom traces exporter (#1065)
+
+## v0.18.1 (2024-05-17)
+
+### Fix
+
+- **openai**: fallback to response model if request model is not set when calculating token usage (#1054)
+- **openai**: add default value of stream as false in token usage metric (#1055)
+
+## v0.18.0 (2024-05-14)
+
+### Feat
+
+- **pinecone**: metrics support (#1041)
+
+### Fix
+
+- **sdk**: handle workflow & tasks generators (#1045)
+- **cohere**: use billed units for token usage (#1040)
+
+## v0.17.7 (2024-05-13)
+
+### Fix
+
+- remove all un-needed tiktoken deps (#1039)
+
+## v0.17.6 (2024-05-13)
+
+### Fix
+
+- **sdk**: removed unneeded tiktoken dependency (#1038)
+
+## v0.17.5 (2024-05-13)
+
+### Fix
+
+- **openai**: relax tiktoken requirements (#1035)
+
+## v0.17.4 (2024-05-13)
+
+### Fix
+
+- **sdk**: loosen SDK requirements for Sentry + Posthog (#1027)
+
+## v0.17.3 (2024-05-08)
+
+### Fix
+
+- **sdk**: separate sentry SDK (#1004)
+
+## v0.17.2 (2024-05-07)
+
+### Fix
+
+- **langchain**: support model-specific packages (#985)
+- **pinecone**: filter argument may be dict (#984)
+
+## v0.17.1 (2024-05-01)
+
+### Fix
+
+- **instrumentation**: correct the module declaration to match package filepath name (#940)
+
+## v0.17.0 (2024-04-29)
+
+### Feat
+
+- **sdk**: otel metrics with traceloop (#883)
+- Updated semantic conventions based on otel community (#884)
+
+### Fix
+
+- **sdk**: do not instrument sentry requests (used internally by SDK) (#939)
+
+## v0.16.9 (2024-04-26)
+
+### Fix
+
+- **openai**: missing await for Embedding.acreate (#900)
+- **cohere**: support v5 (#899)
+- **pinecone**: support v3 (#895)
+- **instrumentation**: the build problem for watsonx auto instrumentation (#885)
+
+## v0.16.8 (2024-04-25)
+
+### Fix
+
+- **langchain**: input/output reporting (#894)
+- **sdk**: reset the color of messages in the custom metrics exporter (#893)
+
+## v0.16.7 (2024-04-25)
+
+### Fix
+
+- **openai**: azure filtering masked all completions (#886)
+- **chromadb**: exception thrown when metadata isn't set (#882)
+
 ## v0.16.6 (2024-04-19)
 
 ### Fix

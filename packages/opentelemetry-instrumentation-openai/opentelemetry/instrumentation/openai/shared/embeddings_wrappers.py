@@ -114,7 +114,7 @@ async def aembeddings_wrapper(
         try:
             # record time for duration
             start_time = time.time()
-            response = wrapped(*args, **kwargs)
+            response = await wrapped(*args, **kwargs)
             end_time = time.time()
         except Exception as e:  # pylint: disable=broad-except
             end_time = time.time()
@@ -189,7 +189,7 @@ def _set_embeddings_metrics(
     duration,
 ):
     shared_attributes = {
-        "llm.response.model": response_dict.get("model") or None,
+        "gen_ai.response.model": response_dict.get("model") or None,
         "server.address": _get_openai_base_url(instance),
     }
 
@@ -202,7 +202,7 @@ def _set_embeddings_metrics(
                     **shared_attributes,
                     "llm.usage.token_type": name.split("_")[0],
                 }
-                token_counter.add(val, attributes=attributes_with_token_type)
+                token_counter.record(val, attributes=attributes_with_token_type)
 
     # vec size metrics
     # should use counter for vector_size?
