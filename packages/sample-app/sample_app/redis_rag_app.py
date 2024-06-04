@@ -21,21 +21,18 @@ rc = Redis(host="localhost", port=6379, decode_responses=True)
 assert rc.ping() == True, "Cannot connect to Redis"
 
 
-@task("load_data_from_file")
 def load_data():
     with open("data/sherlock/firstchapter.txt") as firstchapter_file:
         data = firstchapter_file.readlines()
     return data
 
 
-@task("prepare_embeddings")
 def prepare_embeddings(data):
     response = client.embeddings.create(input=data, model="text-embedding-3-small")
     embeddings = np.array([r["embedding"] for r in response.to_dict()["data"]], dtype=np.float32)
     return embeddings
 
 
-@task("upload_data_to_redis")
 def upload_data_to_redis(data, embeddings):
     pipe = rc.pipeline()
     for i, embedding in enumerate(embeddings):
@@ -47,7 +44,6 @@ def upload_data_to_redis(data, embeddings):
     pipe.execute()
 
 
-@task("create_index")
 def create_index():
     try:
         rc.ft(INDEX_NAME).info()
@@ -67,7 +63,6 @@ def create_index():
         rc.ft(INDEX_NAME).create_index(fields=schema, definition=definition)
 
 
-@task("run_query")
 def query_redis(query_embeddings):
     query = (
         Query("(@tag:{ openai })=>[KNN 2 @vector $vec as score]")
@@ -82,7 +77,6 @@ def query_redis(query_embeddings):
     return relevant_content
 
 
-@task("get_response_from_openai")
 def get_response_from_openai(query, relevant_content):
     messages = [
         {

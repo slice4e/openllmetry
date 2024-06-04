@@ -144,10 +144,10 @@ def _wrap(tracer, to_wrap, wrapped, instance, args, kwargs):
             _set_search_attributes(span, args)
         elif to_wrap.get("method") == "create_index":
             _set_create_index_attributes(span, kwargs)
-        elif to_wrap.get("method") == "hset":
-            _set_hset_attributes(span, args, kwargs)
-        elif to_wrap.get("method") == "set":
-            _set_json_set_attributes(span, args, kwargs)
+        # elif to_wrap.get("method") == "hset":
+        #     _set_hset_attributes(span, args, kwargs)
+        # elif to_wrap.get("method") == "set":
+        #     _set_json_set_attributes(span, args, kwargs)
         elif to_wrap.get("method") == "aggregate":
             _set_aggregate_attributes(span, args)
         else:
